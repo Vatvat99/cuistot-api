@@ -1,0 +1,119 @@
+<?php
+
+namespace Tests\AppBundle\Controller;
+
+use PHPUnit_Framework_TestCase;
+use Tests\AppBundle\ApiTestCase;
+
+class RecipeControllerTest extends ApiTestCase {
+
+    /**
+     * Teste la récupération d'une liste de recettes
+     */
+    public function testList()
+    {
+        // On interroge le client Http pour récupérer une liste de recettes
+        $response = $this->client->get('/app_test.php/receipts');
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertArrayHasKey('receipts', $received_data);
+        $this->assertCount(2, $received_data['receipts']);
+        $this->assertEquals('cake au jambon & olives', $received_data['receipts'][0]['title']);
+    }
+
+    /**
+     * Test la récupération d'une recette
+     */
+    public function testShow()
+    {
+        // On interroge le client Http pour récupérer une recette
+        $response = $this->client->get('/app_test.php/users/cake-au-jambon-et-olives');
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals([
+            'title',
+            'picture',
+            'ingredients',
+            'steps',
+            'category',
+            'user',
+        ], array_keys($received_data));
+        $this->assertEquals('cake au jambon & olives', $received_data['title']);
+    }
+
+    /**
+     * Test la création d'une nouvelle recette
+     */
+    public function testNew()
+    {
+
+        // Préparation des données que l'on va passer au client
+        // @todo remplacer par une vraie catégorie et un vrai utilisateur
+        $data = array(
+            'title' => 'test',
+            'picture' => 'test.jpg',
+            'ingredients' => [
+                'ingrédient 1',
+                'ingrédient 2'
+            ],
+            'steps' => [
+                'étape 1',
+                'étape 2'
+            ],
+            'category' => '',
+            'user' => ''
+        );
+
+        // On interroge le client Http pour créer une recette
+        $response = $this->client->post('/app_test.php/receipts', [
+            'body' => json_encode($data)
+        ]);
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals(201, $response->getStatusCode());
+        $location = $response->getHeader('Location');
+        $this->assertEquals('/app_test.php/receipts/test', $location[0]);
+        $this->assertArrayHasKey('title', $received_data);
+        $this->assertEquals('test', $received_data['title']);
+
+    }
+
+    /**
+     * Teste la modification d'une recette
+     */
+    public function testUpdate()
+    {
+
+        // Préparation des données que l'on va passer au client
+        // @todo remplacer par une vraie catégorie et un vrai utilisateur
+        $data = array(
+            'title' => 'test2',
+            'picture' => 'test.jpg',
+            'ingredients' => [
+                'ingrédient 1',
+                'ingrédient 2'
+            ],
+            'steps' => [
+                'étape 1',
+                'étape 2'
+            ],
+            'category' => '',
+            'user' => ''
+        );
+
+        // On interroge le client Http pour modifier la recette
+        $response = $this->client->put('/app_test.php/receipts/test', [
+            'body' => json_encode($data)
+        ]);
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals('test2', $received_data['title']);
+    }
+
+}

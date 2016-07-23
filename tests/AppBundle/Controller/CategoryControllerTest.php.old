@@ -1,0 +1,90 @@
+<?php
+
+namespace Tests\AppBundle\Controller;
+
+use PHPUnit_Framework_TestCase;
+use Tests\AppBundle\ApiTestCase;
+
+class CategoryControllerTest extends ApiTestCase {
+
+    /**
+     * Teste la récupération d'une liste de catégories
+     */
+    public function testList()
+    {
+        // On interroge le client Http pour récupérer une liste de catégories
+        $response = $this->client->get('/app_test.php/categories');
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertArrayHasKey('categories', $received_data);
+        $this->assertCount(3, $received_data['categories']);
+        $this->assertEquals('entrées', $received_data['categories'][0]['title']);
+    }
+
+    /**
+     * Test la récupération d'une catégorie
+     */
+    public function testShow()
+    {
+        // On interroge le client Http pour récupérer une catégorie
+        $response = $this->client->get('/app_test.php/categories/entrees');
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals([
+            'title'
+        ], array_keys($received_data));
+        $this->assertEquals('entrées', $received_data['title']);
+    }
+
+    /**
+     * Test la création d'une nouvelle catégorie
+     */
+    public function testNew()
+    {
+
+        // Préparation des données que l'on va passer au client
+        $data = array(
+            'title' => 'test',
+        );
+
+        // On interroge le client Http pour créer une catégorie
+        $response = $this->client->post('/app_test.php/categories', [
+            'body' => json_encode($data)
+        ]);
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals(201, $response->getStatusCode());
+        $location = $response->getHeader('Location');
+        $this->assertEquals('/app_test.php/categories/test', $location[0]);
+        $this->assertArrayHasKey('title', $received_data);
+        $this->assertEquals('test', $received_data['title']);
+
+    }
+
+    /**
+     * Teste la modification d'une catégorie
+     */
+    public function testUpdate()
+    {
+
+        // Préparation des données que l'on va passer au client
+        $data = array(
+            'title' => 'test2',
+        );
+
+        // On interroge le client Http pour modifier la catégorie
+        $response = $this->client->put('/app_test.php/users/test', [
+            'body' => json_encode($data)
+        ]);
+
+        // On vérifie la réponse
+        $received_data = json_decode($response->getBody(), true);
+        $this->assertEquals('test2', $received_data['title']);
+    }
+
+}
